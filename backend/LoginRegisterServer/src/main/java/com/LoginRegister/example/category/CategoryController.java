@@ -3,11 +3,14 @@ package com.LoginRegister.example.category;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.LoginRegister.example.category.ICategoryService;
 import com.LoginRegister.example.security.JwtUtil;
 import com.LoginRegister.example.service.UserService;
@@ -46,25 +49,7 @@ public class CategoryController {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
-//    @PostMapping("/addcategory")
-//    public ResponseEntity<Category> addCategory(@RequestBody CategoryDTO genreDTO, HttpServletRequest request) {
-//        // Extract token from the Authorization header
-//        String token = request.getHeader("Authorization");
-//        if (token == null || !token.startsWith("Bearer ")) {
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
-//
-//        token = token.substring(7); // Remove "Bearer " prefix
-//
-//        // Extract user ID from the token
-//        Long userId = jwtUtil.extractUserId(token);
-//
-//        // Associate the genre with the user
-//        genreDTO.setUser_id(userId);
-//
-//        // Save the genre
-//        return ResponseEntity.ok(categoryService.addCategory(genreDTO));
-//    }  
+//    
     
     @PutMapping("/updatecategory/{id}")
     public ResponseEntity<?> updateCategory(
@@ -107,24 +92,7 @@ public class CategoryController {
     }
     
     
-    // New method to get genres by userId
-//    @GetMapping("/user/{userId}")
-//    public ResponseEntity<List<Category>> getCategoriesByUserId(@PathVariable("userId") Long userId) {
-//        try {
-//            List<Category> categories = categoryService.getCategoriesByUserId(userId);
-//            if (categories.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                        .body(null);  // No categories found for this user
-//            }
-//            return ResponseEntity.ok(categories);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(null);  // User not found or no categories found
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(null);  // General server error
-//        }
-//    }
+   
 
     @GetMapping("/catuser/{userId}")
     public ResponseEntity<List<Category>> getCategoriesByUserId(
@@ -159,6 +127,53 @@ public class CategoryController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+ 
+        @PostMapping("/upload-categories/{userId}")
+        public ResponseEntity<?> uploadCSV(
+                @RequestParam("file") MultipartFile file,
+                @PathVariable("userId") Long userId,
+                @RequestHeader("Authorization") String authorizationHeader) {
+
+            try {
+                String token = (authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
+                        ? authorizationHeader.substring(7)
+                        : null;
+
+                if (token == null || !jwtUtil.isValidToken(token)) {
+                    return ResponseEntity.status(401).body(Map.of(
+                            "status", 401,
+                            "message", "Invalid or missing token"
+                    ));
+                }
+
+                if (file.isEmpty() || !CSVHelper.hasCSVFormat(file)) {
+                    return ResponseEntity.status(400).body(Map.of(
+                            "status", 400,
+                            "message", "Invalid or empty CSV file"
+                    ));
+                }
+
+                Long tokenUserId = jwtUtil.extractUserId(token);
+                if (!tokenUserId.equals(userId)) {
+                    return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                }
+
+                Map<String, Integer> result = categoryService.saveCategoriesFromCSV(file, userId);
+
+                return ResponseEntity.ok(Map.of(
+                        "status", 200,
+                        "message", "CSV processed successfully",
+                        "uniqueRecordsAdded", result.get("uniqueRecords"),
+                        "duplicateRecordsSkipped", result.get("duplicateRecords")
+                ));
+
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body(Map.of(
+                        "status", 500,
+                        "message", "Error processing CSV file: " + e.getMessage()
+                ));
+            }
+        }
 
     public static class ErrorResponse {
         private String message;

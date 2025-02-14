@@ -1,117 +1,218 @@
+// import React, { useState } from 'react';
+// import './Login.css'; // Reusing the same styles
+// import { toast, ToastContainer } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
+// import { useNavigate } from "react-router-dom";
+
+// function Forget() {
+//     const [email, setEmail] = useState("");
+//     const navigate = useNavigate();
+
+//     const handleEmailChange = (e) => {
+//         setEmail(e.target.value);
+//     };
+
+//     const handleSendOTP = async (e) => {
+//         e.preventDefault();
+        
+//         if (!email) {
+//             toast.error("Email is required!", { position: "top-right", autoClose: 3000 });
+//             return;
+//         }
+
+//         try {
+//             const response = await fetch("http://localhost:8080/api/auth/forgot-password", {
+//                 method: "POST",
+//                 headers: {
+//                     "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({ email }),
+//             });
+
+//             if (!response.ok) {
+//                 throw new Error(`HTTP error! status: ${response.status}`);
+//             }
+
+//             toast.success("OTP sent successfully!", { position: "top-right", autoClose: 3000 });
+
+//         } catch (error) {
+//             console.error("Error:", error.message);
+//             toast.error("Failed to send OTP!", { position: "top-right", autoClose: 3000 });
+//         }
+//     };
+
+//     return (
+//         <section className="vh-100">
+//             <div className="container-fluid h-custom" style={{ padding: '10%' }}>
+//                 <ToastContainer />
+//                 <div className="row d-flex justify-content-center align-items-center h-100">
+//                     <div className="col-md-9 col-lg-6 col-xl-5">
+//                         <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+//                             className="img-fluid" alt="Sample" />
+//                     </div>
+//                     <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+//                         <form onSubmit={handleSendOTP}>
+//                             <h2>Forget Password</h2>
+
+//                             <div className="form-outline mb-4">
+//                                 <input
+//                                     type="email"
+//                                     id="email"
+//                                     className="form-control form-control-lg"
+//                                     placeholder="Enter your email"
+//                                     value={email}
+//                                     onChange={handleEmailChange}
+//                                     required
+//                                     style={{ border: '1px solid' }}
+//                                 />
+//                                 <label className="form-label" htmlFor="email">Enter Email</label>
+//                             </div>
+
+//                             <div className="text-center text-lg-start mt-4 pt-2">
+//                                 <button
+//                                     type="button"
+//                                     className="btn btn-secondary btn-lg mb-2"
+//                                     style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+//                                     onClick={() => navigate("/")}>
+//                                     Login
+//                                 </button>
+//                                 <br />
+//                                 <button
+//                                     type="submit"
+//                                     className="btn btn-primary btn-lg"
+//                                     style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}>
+//                                     Send OTP
+//                                 </button>
+//                             </div>
+//                         </form>
+//                     </div>
+//                 </div>
+//             </div>
+//         </section>
+//     );
+// }
+
+// export default Forget;
+
+
 import React, { useState } from 'react';
-import axios from 'axios';
+import './Login.css'; 
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
-function ForgetPassword() {
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
+function Forget() {
+    const [email, setEmail] = useState("");
+    const [otpSent, setOtpSent] = useState(false); // Track OTP sent
+    const [otp, setOtp] = useState(""); // OTP input field
+    const navigate = useNavigate();
 
-  const handleSendOtp = async () => {
-    try {
-      const response = await axios.post('http://localhost:8080/auth/forgotPassword', { email });
-      alert(response.data);
-      setIsOtpSent(true);
-    } catch (error) {
-      alert('Error sending OTP. Please try again.');
-    }
-  };
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
+    };
 
-  const handleResetPassword = async () => {
-    if (newPassword !== confirmPassword) {
-      alert("Passwords don't match");
-      return;
-    }
+    const handleOtpChange = (e) => {
+        setOtp(e.target.value);
+    };
 
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/auth/resetPassword?email=${email}&otp=${otp}&newPassword=${newPassword}&confirmPassword=${confirmPassword}`
-      );
-      alert(response.data);
-      if (response.data === 'Password reset successful') {
-        window.location.href = '/login';
-      }
-    } catch (error) {
-      alert('Error resetting password. Please try again.');
-    }
-  };
+    const handleSendOTP = async (e) => {
+        e.preventDefault();
 
-  return (
-    <section className="vh-100">
-      <div className="container-fluid h-custom" style={{ padding: '10%' }}>
-        <div className="row d-flex justify-content-center align-items-center h-100">
-          <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-            <form>
-              <h2>Forget Password</h2>
+        if (!email) {
+            toast.error("Email is required!", { position: "top-right", autoClose: 3000 });
+            return;
+        }
 
-              {!isOtpSent ? (
-                <>
-                  <div className="form-outline mb-4">
-                    <input
-                      type="email"
-                      className="form-control form-control-lg"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <label className="form-label">Email Address</label>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg"
-                    onClick={handleSendOtp}
-                  >
-                    Send OTP
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="form-outline mb-4">
-                    <input
-                      type="text"
-                      className="form-control form-control-lg"
-                      placeholder="Enter OTP"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                    />
-                    <label className="form-label">Verification Code</label>
-                  </div>
-                  <div className="form-outline mb-4">
-                    <input
-                      type="password"
-                      className="form-control form-control-lg"
-                      placeholder="New Password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <label className="form-label">New Password</label>
-                  </div>
-                  <div className="form-outline mb-4">
-                    <input
-                      type="password"
-                      className="form-control form-control-lg"
-                      placeholder="Confirm Password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                    <label className="form-label">Confirm Password</label>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg"
-                    onClick={handleResetPassword}
-                  >
-                    Set Password
-                  </button>
-                </>
-              )}
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+        try {
+            const response = await fetch("http://localhost:8080/api/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            toast.success("OTP sent successfully!", { position: "top-right", autoClose: 3000 });
+            setOtpSent(true);
+
+        } catch (error) {
+            console.error("Error:", error.message);
+            toast.error("Failed to send OTP!", { position: "top-right", autoClose: 3000 });
+        }
+    };
+
+    const handleVerifyOtp = () => {
+        if (!otp) {
+            toast.error("Enter OTP to continue!", { position: "top-right", autoClose: 3000 });
+            return;
+        }
+
+        navigate("/reset-password", { state: { email, otp } });
+    };
+
+    return (
+        <section className="vh-100">
+            <div className="container-fluid h-custom" style={{ padding: '10%' }}>
+                <ToastContainer />
+                <div className="row d-flex justify-content-center align-items-center h-100">
+                    <div className="col-md-9 col-lg-6 col-xl-5">
+                        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+                            className="img-fluid" alt="Sample" />
+                    </div>
+                    <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+                        <form onSubmit={handleSendOTP}>
+                            <h2>Forget Password</h2>
+
+                            <div className="form-outline mb-4">
+                                <input
+                                    type="email"
+                                    id="email"
+                                    className="form-control form-control-lg"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChange={handleEmailChange}
+                                    required
+                                    style={{ border: '1px solid' }}
+                                />
+                                <label className="form-label" htmlFor="email">Enter Email</label>
+                            </div>
+
+                            {otpSent && (
+                                <div className="form-outline mb-4">
+                                    <input
+                                        type="text"
+                                        id="otp"
+                                        className="form-control form-control-lg"
+                                        placeholder="Enter OTP"
+                                        value={otp}
+                                        onChange={handleOtpChange}
+                                        required
+                                        style={{ border: '1px solid' }}
+                                    />
+                                    <label className="form-label" htmlFor="otp">Enter OTP</label>
+                                </div>
+                            )}
+
+                            <div className="text-center text-lg-start mt-4 pt-2">
+                                {!otpSent ? (
+                                    <button type="submit" className="btn btn-primary btn-lg">
+                                        Send OTP
+                                    </button>
+                                ) : (
+                                    <button type="button" className="btn btn-success btn-lg" onClick={handleVerifyOtp}>
+                                        Verify OTP
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
 }
 
-export default ForgetPassword;
+export default Forget;
+

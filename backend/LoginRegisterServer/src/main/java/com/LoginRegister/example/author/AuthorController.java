@@ -79,11 +79,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.LoginRegister.example.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -184,6 +187,59 @@ public class AuthorController {
     }
 
 
+    
+    @PostMapping("/upload-authors/{userId}")
+    public ResponseEntity<?> uploadCSV(
+            @RequestParam("file") MultipartFile file, 
+            @PathVariable("userId") Long userId,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        
+        try {
+            // Extract token from Authorization header
+            String token = (authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
+                    ? authorizationHeader.substring(7)
+                    : null;
+
+            // Validate the token
+            if (token == null || !jwtUtil.isValidToken(token)) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "status", 401,
+                        "message", "Invalid or missing token"
+                ));
+            }
+
+            // Validate CSV file format
+            if (file.isEmpty() || !CSVHelper.hasCSVFormat(file)) {
+                return ResponseEntity.status(400).body(Map.of(
+                        "status", 400,
+                        "message", "Invalid or empty CSV file"
+                ));
+            }
+
+            // Validate user ID from the token matches the userId parameter
+            Long tokenUserId = jwtUtil.extractUserId(token);
+            if (!tokenUserId.equals(userId)) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            // Save authors from CSV and get counts
+            Map<String, Integer> result = authorService.saveAuthorsFromCSV(file, userId);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", 200,
+                    "message", "CSV processed successfully",
+                    "uniqueRecordsAdded", result.get("uniqueRecords"),
+                    "duplicateRecordsSkipped", result.get("duplicateRecords")
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "status", 500,
+                    "message", "Error processing CSV file: " + e.getMessage()
+            ));
+        }
+    }
+    
     public static class ErrorResponse {
         private String message;
 

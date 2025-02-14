@@ -1,5 +1,5 @@
 //import React from 'react';
-import React, { useState } from 'react'; 
+import React, { useState,useEffect } from 'react'; 
 //import jwt_decode from "jwt-decode";
 //import jwt_decode from "jwt-decode"; // Already imported
 import { jwtDecode } from "jwt-decode";
@@ -33,49 +33,16 @@ function Login(){
     };
     const navigate = useNavigate();
 
-
-  //   const handleSubmit = async (e) => {
-  //     e.preventDefault();
-  //     console.log("This is our email: " + email + " and password: " + password);
-      
-  //     const data={
-  //       "email" : email,
-  //       "password" : password
-  //     }
-     
-  //   try {
-  //     const response = await fetch("http://localhost:8080/api/auth/login", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(data),
-  //     });
     
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`); // Corrected line
-  //     }
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        navigate("/"); // Redirect to dashboard if token exists
+      }
+    }, [navigate]);
+
+
     
-  //     const result = await response;
-  //     // console.log(result) && toast.success("Success 123", {position:"top-right", autoClose:3000})
-  //     ;
-
-  //   if (result === false) {
-  //     // alert("Invalid email or password!");
-  //     toast.error("Invalid email or password!", {position:"top-right", autoClose:3000})
-
-  //   } else {
-  //     // alert("Login Successfull");
-  //     toast.success("Login Successful", {position:"top-right", autoClose:3000});
-  //     navigate("/dashboard", { state: { message: "Login Successful!" } });
-  //   }
-  // } catch (error) {
-  //   console.error("Error:", error.message);
-  //   toast.error("Invalid email or password!", {position:"top-right", autoClose:3000})
-  // }
-
- 
-
     const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -88,6 +55,7 @@ function Login(){
         const response = await fetch("http://localhost:8080/api/auth/login", {
             method: "POST",
             headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(data),
@@ -130,7 +98,7 @@ function Login(){
         </div>
         <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
           <form onSubmit={handleSubmit}> 
-        <h2>Tech Tian Inventory Login</h2>
+        <h2>Tech Tian Book Inventory Login</h2>
 
         <div data-mdb-input-init className="form-outline mb-4">
           <input
@@ -172,7 +140,7 @@ function Login(){
                     cursor: 'pointer',
                   }}
                 >
-                  {passwordVisible ? '🙈' : '👁️'} {/* Change icon based on visibility */}
+                  {passwordVisible ? '👁️' : '🙈' } {/* Change icon based on visibility */}
                 </span>
               
 
@@ -204,31 +172,11 @@ function Login(){
         </div>
       </div>
     </div>
-    {/* <div
-      className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
-     
-      <div className="text-white mb-3 mb-md-0">
-        Copyright © 2020. All rights reserved.
-      </div>
-     
-      <div>
-        <a href="#!" className="text-white me-4">
-          <i className="fab fa-facebook-f"></i>
-        </a>
-        <a href="#!" className="text-white me-4">
-          <i className="fab fa-twitter"></i>
-        </a>
-        <a href="#!" className="text-white me-4">
-          <i className="fab fa-google"></i>
-        </a>
-        <a href="#!" className="text-white">
-          <i className="fab fa-linkedin-in"></i>
-        </a>
-      </div>
     
-    </div> */}
   </section>
   );
 }
 
 export default Login;
+
+

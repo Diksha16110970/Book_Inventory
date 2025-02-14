@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.LoginRegister.example.author.AuthorController.ErrorResponse;
 import com.LoginRegister.example.repository.UsersRepo;
@@ -21,9 +22,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class BookController {
 
     @Autowired
@@ -145,4 +148,5 @@ public class BookController {
                     .body(new ErrorResponse("Failed to fetch book count: " + e.getMessage()));
         }
     }
+    
 }

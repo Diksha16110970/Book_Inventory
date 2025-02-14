@@ -93,11 +93,24 @@
 
 package com.LoginRegister.example.author;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+
+
+import io.jsonwebtoken.io.IOException;
 
 import com.LoginRegister.example.entity.Users;
 import com.LoginRegister.example.repository.UsersRepo;
@@ -162,7 +175,7 @@ public class AuthorServiceImpl implements IAuthorService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + authorDTO.getUser_id()));
 
         Author author = new Author();
-        //author.setName(authorDTO.getName());
+        author.setName(authorDTO.getName());
         author.setUser(user); 
 
         // Save and return the updated author
@@ -179,22 +192,7 @@ public class AuthorServiceImpl implements IAuthorService {
         authorRepository.delete(author);
     }
 
-//    @Override
-//    public List<AuthorDTO> getAllAuthors() {
-//        // Fetch all authors
-//        List<Author> authors = authorRepository.findAll();
-//
-//        // Convert each Author entity to AuthorDTO
-//        return authors.stream().map(author -> {
-//            AuthorDTO dto = new AuthorDTO();
-//            dto.setAuthorId(author.getAuthorId());
-//            dto.setName(author.getName());
-//            dto.setUser_id(author.getUser().getUser_id());
-//          
-//            return dto;
-//        }).toList();
-//    }
-    
+
     @Override
     public List<AuthorDTO> getAllAuthors() {
         // Fetch all authors
@@ -238,6 +236,22 @@ public class AuthorServiceImpl implements IAuthorService {
             throw new RuntimeException("Failed to fetch author count", e);  // Handle any exception
         }
     }
+    
+
+    @Override
+    public Map<String, Integer> saveAuthorsFromCSV(MultipartFile file, Long userId) {
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        try {
+            InputStream inputStream = file.getInputStream();
+            Map<String, Integer> recordCounts = CSVHelper.csvToAuthors(inputStream, user, authorRepository);
+            return recordCounts;
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing CSV file: " + e.getMessage());
+        }
+    }
+    
     
 }
 

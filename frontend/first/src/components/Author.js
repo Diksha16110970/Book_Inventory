@@ -1,3 +1,6 @@
+
+
+
 // import React, { useState, useEffect } from 'react';
 // import './Dashboard.css';
 // import { ToastContainer, toast } from 'react-toastify';
@@ -7,12 +10,12 @@
 // const Author = () => {
 //   const navigate = useNavigate();
 //   const [authors, setAuthors] = useState([]);
-//   const [newAuthor, setNewAuthor] = useState({ name: '', description: '' });
+//   const [newAuthor, setNewAuthor] = useState({ name: '' });
 //   const [isEdit, setIsEdit] = useState(false);
 //   const [editId, setEditId] = useState(null);
-//   const [searchQuery, setSearchQuery] = useState(''); 
+//   const [searchQuery, setSearchQuery] = useState('');
 //   const [currentPage, setCurrentPage] = useState(1);
-//   const recordsPerPage = 10;
+//   const recordsPerPage = 9;
 
 //   useEffect(() => {
 //     fetchAuthors();
@@ -22,9 +25,9 @@
 //     const token = localStorage.getItem('token');
 //     if (token) {
 //       try {
-//         const payload = token.split('.')[1];  // Get the payload (second part)
-//         const decodedPayload = JSON.parse(atob(payload));  // Decode and parse the payload
-//         return decodedPayload.sub;  // Use 'sub' field for user_id
+//         const payload = token.split('.')[1];  
+//         const decodedPayload = JSON.parse(atob(payload));  
+//         return decodedPayload.sub;  
 //       } catch (error) {
 //         console.error('Error decoding token:', error);
 //         return null;
@@ -60,6 +63,8 @@
 
 //       const authors = await response.json();
 //       setAuthors(authors);
+//       const totalPages = Math.ceil(authors.length / recordsPerPage);
+//       setCurrentPage(totalPages); // Move to last page after fetching
 //     } catch (error) {
 //       console.error('Error fetching authors:', error);
 //       toast.error('Failed to fetch authors');
@@ -80,13 +85,23 @@
 //       return;
 //     }
 
+//     // Trim spaces from the name
+//     const trimmedName = newAuthor.name.trim();
+
+//     // Check if the author already exists
+//     const authorExists = authors.some((author) => author.name.trim().toLowerCase() === trimmedName.toLowerCase());
+//     if (authorExists) {
+//       toast.error('Author name already exists!');
+//       return;
+//     }
+
 //     const url = isEdit
 //       ? `http://localhost:8080/api/auth/updateauthor/${editId}`
 //       : 'http://localhost:8080/api/auth/addauthor';
 
 //     const method = isEdit ? 'PUT' : 'POST';
 //     const authorData = {
-//       name: newAuthor.name,
+//       name: trimmedName,  // Use trimmed name
 //       user_id: userId,
 //     };
 
@@ -105,8 +120,7 @@
 //         throw new Error(errorData.message || 'Failed to add/update author');
 //       }
 
-//       const result = await response.json();
-//       toast.success(result.message || (isEdit ? 'Author updated!' : 'Author added!'));
+//       toast.success(isEdit ? 'Author updated!' : 'Author added!');
 //       fetchAuthors();
 //       setNewAuthor({ name: '' });
 //       setIsEdit(false);
@@ -136,24 +150,32 @@
 //       }
 
 //       toast.success('Author deleted!');
-//       setAuthors(authors.filter((author) => author.authorId !== id));
+//       const updatedAuthors = authors.filter((author) => author.authorId !== id);
+//       setAuthors(updatedAuthors);
+//       const totalPages = Math.ceil(updatedAuthors.length / recordsPerPage);
+//       setCurrentPage((prev) => Math.min(prev, totalPages)); 
 //     } catch (error) {
 //       toast.error(error.message || 'Failed to delete author');
 //     }
 //   };
+
 //   const handleSearchChange = (e) => {
 //     setSearchQuery(e.target.value);
 //   };
 
-//   // Filter authors based on search query
 //   const filteredAuthors = authors.filter((author) =>
-//     author.name.toLowerCase().includes(searchQuery.toLowerCase())
+//     author.name.toLowerCase().startsWith(searchQuery.toLowerCase())
 //   );
+
+//   const totalPages = Math.ceil(filteredAuthors.length / recordsPerPage);
+//   const indexOfLastRecord = currentPage * recordsPerPage;
+//   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+//   const currentRecords = filteredAuthors.slice(indexOfFirstRecord, indexOfLastRecord);
 
 //   return (
 //     <div className="dashboard-container">
 //       <div className="sidebar">
-//       <ul>
+//         <ul>
 //           <li onClick={() => navigate('/dashboard')}>Dashboard</li>
 //           <li onClick={() => navigate('/authors')}>Authors</li>
 //           <li onClick={() => navigate('/book')}>Book</li>
@@ -179,6 +201,7 @@
 //             <button type="submit">{isEdit ? 'Update' : 'Add'} Author</button>
 //           </form>
 //         </div>
+
 //         <div className="author-search">
 //           <input
 //             type="text"
@@ -187,6 +210,7 @@
 //             onChange={handleSearchChange}
 //           />
 //         </div>
+
 //         <div className="author-list">
 //           <h3>Authors List</h3>
 //           <table>
@@ -197,20 +221,41 @@
 //               </tr>
 //             </thead>
 //             <tbody>
-//               {authors.map((author) => (
+//               {currentRecords.map((author) => (
 //                 <tr key={author.authorId}>
 //                   <td>{author.name}</td>
 //                   <td>
 //                     <button className="edit-btn" onClick={() => handleEdit(author)}>Edit</button>
 //                     <button className="delete-btn" onClick={() => handleDelete(author.authorId)}>Delete</button>
 //                   </td>
-            
 //                 </tr>
 //               ))}
 //             </tbody>
 //           </table>
 //         </div>
+
+//         <div className="pagination">
+//           <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Previous</button>
+//           <span> Page {currentPage} of {totalPages} </span>
+//           <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Next</button>
+//         </div>
 //       </div>
+
+//       <footer style={{
+//         padding: '10px',
+//         backgroundColor: 'rgb(149 153 157)',
+//         textAlign: 'center',
+//         fontSize: '14px',
+//         color: 'white',
+//         borderTop: '1px solid #dee2e6',
+//         marginTop: 'auto',
+//         width: '100%',
+//         position: 'absolute',
+//         bottom: '0',
+//         left: '0',
+//       }}>
+//         <p>&copy; {new Date().getFullYear()} Diksha Nagdevate Tech Titan's Inventory. All Rights Reserved.</p>
+//       </footer>
 
 //       <ToastContainer />
 //     </div>
@@ -218,6 +263,7 @@
 // };
 
 // export default Author;
+
 
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
@@ -228,12 +274,16 @@ import { useNavigate } from 'react-router-dom';
 const Author = () => {
   const navigate = useNavigate();
   const [authors, setAuthors] = useState([]);
-  const [newAuthor, setNewAuthor] = useState({ name: '', description: '' });
+  const [newAuthor, setNewAuthor] = useState({ name: '' });
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); 
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const recordsPerPage = 4;
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState('');
+  const [uniqueRecords, setUniqueRecords] = useState(0);
+  const [duplicateRecords, setDuplicateRecords] = useState(0);
 
   useEffect(() => {
     fetchAuthors();
@@ -243,9 +293,9 @@ const Author = () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const payload = token.split('.')[1];  // Get the payload (second part)
-        const decodedPayload = JSON.parse(atob(payload));  // Decode and parse the payload
-        return decodedPayload.sub;  // Use 'sub' field for user_id
+        const payload = token.split('.')[1];
+        const decodedPayload = JSON.parse(atob(payload));
+        return decodedPayload.sub;
       } catch (error) {
         console.error('Error decoding token:', error);
         return null;
@@ -281,6 +331,8 @@ const Author = () => {
 
       const authors = await response.json();
       setAuthors(authors);
+      const totalPages = Math.ceil(authors.length / recordsPerPage);
+      setCurrentPage(totalPages); // Move to last page after fetching
     } catch (error) {
       console.error('Error fetching authors:', error);
       toast.error('Failed to fetch authors');
@@ -301,13 +353,23 @@ const Author = () => {
       return;
     }
 
+    // Trim spaces from the name
+    const trimmedName = newAuthor.name.trim();
+
+    // Check if the author already exists
+    const authorExists = authors.some((author) => author.name.trim().toLowerCase() === trimmedName.toLowerCase());
+    if (authorExists) {
+      toast.error('Author name already exists!');
+      return;
+    }
+
     const url = isEdit
       ? `http://localhost:8080/api/auth/updateauthor/${editId}`
       : 'http://localhost:8080/api/auth/addauthor';
 
     const method = isEdit ? 'PUT' : 'POST';
     const authorData = {
-      name: newAuthor.name,
+      name: trimmedName,  // Use trimmed name
       user_id: userId,
     };
 
@@ -326,8 +388,7 @@ const Author = () => {
         throw new Error(errorData.message || 'Failed to add/update author');
       }
 
-      const result = await response.json();
-      toast.success(result.message || (isEdit ? 'Author updated!' : 'Author added!'));
+      toast.success(isEdit ? 'Author updated!' : 'Author added!');
       fetchAuthors();
       setNewAuthor({ name: '' });
       setIsEdit(false);
@@ -357,7 +418,10 @@ const Author = () => {
       }
 
       toast.success('Author deleted!');
-      setAuthors(authors.filter((author) => author.authorId !== id));
+      const updatedAuthors = authors.filter((author) => author.authorId !== id);
+      setAuthors(updatedAuthors);
+      const totalPages = Math.ceil(updatedAuthors.length / recordsPerPage);
+      setCurrentPage((prev) => Math.min(prev, totalPages));
     } catch (error) {
       toast.error(error.message || 'Failed to delete author');
     }
@@ -367,12 +431,54 @@ const Author = () => {
     setSearchQuery(e.target.value);
   };
 
-  // Filter authors based on search query
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleCSVSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const userId = getUserId();
+
+    if (!file) {
+      setMessage('Please select a CSV file.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/auth/upload-authors/${userId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(data.message);
+        setUniqueRecords(data.uniqueRecordsAdded);
+        setDuplicateRecords(data.duplicateRecordsSkipped);
+      } else {
+        setMessage(data.message);
+      }
+    } catch (error) {
+      setMessage('Error uploading CSV file.');
+    }
+  };
+
   const filteredAuthors = authors.filter((author) =>
-    //author.name.toLowerCase().includes(searchQuery.toLowerCase())
-  author.name.toLowerCase().startsWith(searchQuery.toLowerCase())
- 
+    author.name.toLowerCase().startsWith(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredAuthors.length / recordsPerPage);
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredAuthors.slice(indexOfFirstRecord, indexOfLastRecord);
 
   return (
     <div className="dashboard-container">
@@ -404,6 +510,18 @@ const Author = () => {
           </form>
         </div>
 
+        {/* CSV Upload Form */}
+        <div className="csv-upload-form">
+          <h3>Upload Authors from CSV</h3>
+          <form onSubmit={handleCSVSubmit}>
+            <input type="file" accept=".csv" onChange={handleFileChange} />
+            <button type="submit">Upload CSV</button>
+          </form>
+          {message && <p>{message}</p>}
+          {uniqueRecords > 0 && <p>Unique records added: {uniqueRecords}</p>}
+          {duplicateRecords > 0 && <p>Duplicate records skipped: {duplicateRecords}</p>}
+        </div>
+
         <div className="author-search">
           <input
             type="text"
@@ -423,7 +541,7 @@ const Author = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredAuthors.map((author) => (
+              {currentRecords.map((author) => (
                 <tr key={author.authorId}>
                   <td>{author.name}</td>
                   <td>
@@ -435,7 +553,15 @@ const Author = () => {
             </tbody>
           </table>
         </div>
-        <footer style={{
+
+        <div className="pagination">
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Previous</button>
+          <span> Page {currentPage} of {totalPages} </span>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Next</button>
+        </div>
+      </div>
+
+      <footer style={{
         padding: '10px',
         backgroundColor: 'rgb(149 153 157)',
         textAlign: 'center',
@@ -448,9 +574,8 @@ const Author = () => {
         bottom: '0',
         left: '0',
       }}>
-        <p>&copy; {new Date().getFullYear()} Diksha Nagdevate</p>
+        <p>&copy; {new Date().getFullYear()} Diksha Nagdevate Tech Titan's Inventory. All Rights Reserved.</p>
       </footer>
-      </div>
 
       <ToastContainer />
     </div>

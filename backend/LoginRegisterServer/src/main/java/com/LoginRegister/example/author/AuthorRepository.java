@@ -12,6 +12,10 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
     Optional<Author> findByName(String name); // Optional for safe null checks
    
     List<Author> findByUser(Users user);
+
+	Optional<Users> findByNameAndUser(String authorName, Users user);
+
+	
 }
 
 

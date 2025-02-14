@@ -131,6 +131,8 @@
 package com.LoginRegister.example.book;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 
 import com.LoginRegister.example.author.AuthorDTO;
@@ -159,6 +161,7 @@ public class BookDTO {
     private BigDecimal price;
 
     @NotNull(message = "ISBN is required")
+    @Size(min = 13, message = "ISBN must be at least 6 characters long")
     private String isbn;
 
     private UserDTO user;

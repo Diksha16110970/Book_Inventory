@@ -143,10 +143,13 @@
 
 package com.LoginRegister.example.category;
 
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.LoginRegister.example.entity.Users;
 import com.LoginRegister.example.repository.UsersRepo;
@@ -233,6 +236,18 @@ public class CategoryServiceImpl implements ICategoryService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
         return categoryRepository.findByUser(user);
+    }
+    @Override
+    public Map<String, Integer> saveCategoriesFromCSV(MultipartFile file, Long userId) {
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        try {
+            InputStream inputStream = file.getInputStream();
+            return CSVHelper.csvToCategory(inputStream, user, categoryRepository);
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing CSV file: " + e.getMessage());
+        }
     }
 }
 

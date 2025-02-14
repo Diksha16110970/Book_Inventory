@@ -28,10 +28,18 @@ function SignUp() {
     e.preventDefault();
   
     if (register.password !== register.confirmPassword) {
-      alert("Passwords do not match!");
+      //alert("Passwords do not match!");
+      toast.error("Passwords do not match!", {position:"top-right", autoClose:3000})
       return;
     }
-  
+    if (register.password.length < 6) {
+      toast.error("Password must be at least 6 characters long", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+    
     try {
       const response = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
@@ -57,7 +65,8 @@ function SignUp() {
       toast.success("User registered successfully!", {position:"top-right", autoClose:3000})
     } catch (error) {
       console.error("Error:", error.message);
-      alert(`Error: ${error.message}`);
+      //alert(`Error: ${error.message}`);
+      toast.error("Email Already Exist!", {position:"top-right", autoClose:3000})
     }
   };
   
